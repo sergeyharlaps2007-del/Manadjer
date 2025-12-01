@@ -32,3 +32,31 @@ function renderTable() {
         table.appendChild(row);
     });
 }
+
+
+function addTask() {
+    const text = document.getElementById("taskText").value;
+    const date = document.getElementById("taskDate").value;
+
+    if (!text || !date) {
+        alert("Заполни оба поля");
+        return;
+    }
+
+    const newTask = {
+        id: Date.now(),
+        text: text,
+        date: date,
+        done: false             //Добавляет
+    };
+
+    tasks.push(newTask);
+
+    saveTasks();
+    renderTable();
+
+    // очистка полей
+    document.getElementById("taskText").value = "";
+    document.getElementById("taskDate").value = "";
+}
+
