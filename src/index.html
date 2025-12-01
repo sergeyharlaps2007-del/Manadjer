@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер задач</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+<h1>Менеджер задач</h1>
+
+<div>
+
+<input id="Tasktext" placeholder="Текст задачи">
+<input id="Taskdate" type="data">
+<button onclick="addTask()">Добавить</button>
+
+</div>
+<table border="1" width="600" style="margin-top: 20px;"></table>
+
+<thead>
+<tr>
+
+<th>ID</th>
+<th>Задача</th>
+<th>Дата</th>
+<th>Статус</th>
+<th>Действие</th>
+
+</tr>
+<tbody id="TaskTable"></tbody>
+</thead>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
