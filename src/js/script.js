@@ -1,20 +1,24 @@
 let tasks = [];
+
+// Загрузка LocalStorage
 function loadTask() {
     const saved = localStorage.getItem("tasks");
     if (saved) {
         tasks = JSON.parse(saved);
-    }                                                 //Загрузка,сохранение LocalStorage
+    }
 }
 
+// Сохранение LocalStorage
 function saveTasks (){
-    localStorage.setItem("tasks",JSON.stringify(tasks));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 }
+
 
 
 function renderTable() {
     const table = document.getElementById("taskTable");
     table.innerHTML = "";
-
+                                   //Отображение таблицы
     tasks.forEach(task => {
         const row = document.createElement("tr");
 
@@ -28,16 +32,17 @@ function renderTable() {
                 <button onclick="deleteTask(${task.id})">Удалить</button>
             </td>
         `;
-                                        //Отображает таблицу
+
         table.appendChild(row);
     });
 }
 
 
+
 function addTask() {
     const text = document.getElementById("taskText").value;
     const date = document.getElementById("taskDate").value;
-
+                                     //Добавляет задачи 
     if (!text || !date) {
         alert("Заполни оба поля");
         return;
@@ -47,7 +52,7 @@ function addTask() {
         id: Date.now(),
         text: text,
         date: date,
-        done: false             //Добавляет
+        done: false
     };
 
     tasks.push(newTask);
@@ -55,8 +60,29 @@ function addTask() {
     saveTasks();
     renderTable();
 
-    // очистка полей
     document.getElementById("taskText").value = "";
     document.getElementById("taskDate").value = "";
 }
 
+
+
+function deleteTask(id){
+    tasks = tasks.filter(task => task.id !== id);
+    saveTasks();            //Удаление
+    renderTable();
+}
+
+
+
+function toggleDone(id){
+    const task = tasks.find(t => t.id === id);
+    task.done = !task.done;      //Статут переключается 
+
+    saveTasks();
+    renderTable();
+}
+
+
+
+loadTask();
+renderTable();

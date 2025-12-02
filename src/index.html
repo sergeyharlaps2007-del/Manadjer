@@ -11,26 +11,24 @@
 <h1>Менеджер задач</h1>
 
 <div>
-
-<input id="Tasktext" placeholder="Текст задачи">
-<input id="Taskdate" type="data">
-<button onclick="addTask()">Добавить</button>
-
+    <input id="taskText" placeholder="Текст задачи">
+    <input id="taskDate" type="date">
+    <button onclick="addTask()">Добавить</button>
 </div>
-<table border="1" width="600" style="margin-top: 20px;"></table>
 
-<thead>
-<tr>
+<table border="1" width="600" style="margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Задача</th>
+            <th>Дата</th>
+            <th>Статус</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
 
-<th>ID</th>
-<th>Задача</th>
-<th>Дата</th>
-<th>Статус</th>
-<th>Действие</th>
-
-</tr>
-<tbody id="TaskTable"></tbody>
-</thead>
+    <tbody id="taskTable"></tbody>
+</table>
 
 <script src="js/script.js"></script>
 
