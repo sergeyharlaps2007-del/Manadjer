@@ -2,15 +2,64 @@ let tasks = [];
 
 // Загрузка LocalStorage
 function loadTask() {
-    const saved = localStorage.getItem("tasks");
-    if (saved) {
-        tasks = JSON.parse(saved);
+    try {
+        const saved = localStorage.getItem("tasks");
+        if (saved) {
+            const parsed = JSON.parse(saved);
+
+            if (!Array.isArray(parsed)) throw "not array";
+
+            tasks = parsed;
+        }
+    } catch (e) {
+        console.warn("Ошибка: повреждён JSON, очищаю.");
+        localStorage.removeItem("tasks");
+        tasks = [];
     }
 }
 
 // Сохранение LocalStorage
 function saveTasks (){
     localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+
+
+
+function escapeHTML(str) {                   // Защита от <script>alert(1)</script>
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+
+
+function validateText(text) {
+    if (!text) return false;
+    text = text.trim();                                // Валидация текста
+    if (text.length === 0) return false;
+    if (text.length > 200) return false;
+    return true;
+}
+
+
+function validateDate(dateStr) {
+    if (!dateStr) return false;
+
+    const date = new Date(dateStr);
+    if (isNaN(date)) return false;                 // Валидация даты
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    //дату нельзя сделать в прошлом
+    if (date < today) return false;
+
+    return true;
 }
 
 
@@ -24,12 +73,12 @@ function renderTable() {
 
         row.innerHTML = `
             <td>${task.id}</td>
-            <td>${task.text}</td>
+            <td>${escapeHTML(task.text)}</td>
             <td>${task.date}</td>           
             <td>${task.done ? "+" : "-"}</td>
             <td>
-                <button onclick="toggleDone(${task.id})">Выполнить</button>
-                <button onclick="deleteTask(${task.id})">Удалить</button>
+                <button data-action="done" data-id="${task.id}">Выполнить</button>
+                <button data-action="delete" data-id="${task.id}">Удалить</button>
             </td>
         `;
 
@@ -40,17 +89,25 @@ function renderTable() {
 
 
 function addTask() {
-    const text = document.getElementById("taskText").value;
+    const text = document.getElementById("taskText").value;         //Добавляет задачи
     const date = document.getElementById("taskDate").value;
-                                     //Добавляет задачи 
-    if (!text || !date) {
-        alert("Заполни оба поля");
+                                      
+
+    
+    if (!validateText(text)) {
+        alert("Некорректный текст задачи!");         // Валидация текста
+        return;
+    }
+
+    
+    if (!validateDate(date)) {
+        alert("Некорректная дата!");           // Валидация даты
         return;
     }
 
     const newTask = {
         id: Date.now(),
-        text: text,
+        text: text.trim(),
         date: date,
         done: false
     };
@@ -76,7 +133,7 @@ function deleteTask(id){
 
 function toggleDone(id){
     const task = tasks.find(t => t.id === id);
-    task.done = !task.done;      //Статут переключается 
+    task.done = !task.done;      //Статус переключается 
 
     saveTasks();
     renderTable();
@@ -84,5 +141,26 @@ function toggleDone(id){
 
 
 
-loadTask();
-renderTable();
+//Убрал Inline Js и добавлены переклбючатели
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    loadTask();
+    renderTable();
+
+    // Обработчик кнопки добавить
+    document.getElementById("addBtn").addEventListener("click", addTask);
+
+    // Обработка кнопок "Выполнить" и "Удалить"
+    document.getElementById("taskTable").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+        const id = Number(btn.dataset.id);
+
+        if (action === "delete") deleteTask(id);
+        if (action === "done") toggleDone(id);
+    });
+
+});
