@@ -1,36 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Менеджер задач</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    
-<h1>Менеджер задач</h1>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>Менеджер задач</h1>
 
-<div>
-    <input id="taskText" placeholder="Текст задачи">
-    <input id="taskDate" type="date">
-    <button id="addBtn">Добавить</button>
-</div>
+    <div>
+      <input id="taskText" placeholder="Текст задачи" />
+      <input id="taskDate" type="date" />
+      <button id="addBtn">Добавить</button>
+    </div>
 
-<table border="1" width="600" style="margin-top: 20px;">
-    <thead>
+    <table border="1" width="600" style="margin-top: 20px">
+      <thead>
         <tr>
-            <th>ID</th>
-            <th>Задача</th>
-            <th>Дата</th>
-            <th>Статус</th>
-            <th>Действие</th>
+          <th>ID</th>
+          <th>Задача</th>
+          <th>Дата</th>
+          <th>Статус</th>
+          <th>Действие</th>
         </tr>
-    </thead>
+      </thead>
 
-    <tbody id="taskTable"></tbody>
-</table>
+      <tbody id="taskTable"></tbody>
+    </table>
 
-<script src="js/script.js"></script>
-
-</body>
+    <script src="js/script.js"></script>
+  </body>
 </html>
