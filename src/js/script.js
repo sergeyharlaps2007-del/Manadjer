@@ -59,24 +59,43 @@ function validateDate(dateStr) {
 function renderTable() {
   const table = document.getElementById("taskTable");
   table.innerHTML = "";
+
   //Отображение таблицы
   tasks.forEach((task) => {
     const row = document.createElement("tr");
 
-    row.innerHTML = `
-            <td>${task.id}</td>
-            <td>${escapeHTML(task.text)}</td>
-            <td>${task.date}</td>           
-            <td>${task.done ? "+" : "-"}</td>
-            <td>
-                <button data-action="done" data-id="${
-                  task.id
-                }">Выполнить</button>
-                <button data-action="delete" data-id="${
-                  task.id
-                }">Удалить</button>
-            </td>
-        `;
+    const tdId = document.createElement("td");
+    tdId.textContent = task.id;
+
+    const tdText = document.createElement("td");
+    tdText.innerHTML = escapeHTML(task.text);
+
+    const tdDate = document.createElement("td");
+    tdDate.innerHTML = escapeHTML(task.date);
+
+    const tdDone = document.createElement("td");
+    tdDone.textContent = task.done ? "+" : "-";
+
+    const tdActions = document.createElement("td");
+
+    const btnDone = document.createElement("button");
+    btnDone.textContent = "Выполнить";
+    btnDone.dataset.action = "done";
+    btnDone.dataset.id = task.id;
+
+    const btnDelete = document.createElement("button");
+    btnDelete.textContent = "Удалить";
+    btnDelete.dataset.action = "delete";
+    btnDelete.dataset.id = task.id;
+
+    tdActions.appendChild(btnDone);
+    tdActions.appendChild(btnDelete);
+
+    row.appendChild(tdId);
+    row.appendChild(tdText);
+    row.appendChild(tdDate);
+    row.appendChild(tdDone);
+    row.appendChild(tdActions);
 
     table.appendChild(row);
   });
