@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,24 +9,23 @@
   <body>
     <h1>Менеджер задач</h1>
 
-    <!-- Кнопка переключения вида  -->
-    <div style="margin-bottom: 15px">
-      <button id="viewToggleBtn" title="Переключить вид">🔁 Вид</button>
-    </div>
-
-    <div>
+    <div style="display: flex; align-items: center; gap: 15px">
       <input id="taskText" placeholder="Текст задачи" />
       <input id="taskDate" type="date" />
       <button id="addBtn">Добавить</button>
+
+      <!-- перекл режимов -->
+      <img id="viewTable" src="table.png" width="30" style="cursor: pointer" />
+      <img
+        id="viewBlocks"
+        src="blocks.png"
+        width="30"
+        style="cursor: pointer"
+      />
     </div>
 
     <!-- Табличный вид -->
-    <table
-      id="taskTableWrapper"
-      border="1"
-      width="600"
-      style="margin-top: 20px"
-    >
+    <table id="tableView" border="1" width="600" style="margin-top: 20px">
       <thead>
         <tr>
           <th>ID</th>
@@ -40,8 +39,22 @@
       <tbody id="taskTable"></tbody>
     </table>
 
-    <!-- Блочный вид -->
-    <div id="taskCardsWrapper" style="display: none; margin-top: 20px"></div>
+    <!-- Блочный вид (изначально скрыт) -->
+    <div id="blockView" style="display: none; margin-top: 20px">
+      <div style="display: flex; gap: 20px">
+        <!-- В работе -->
+        <div style="flex: 1">
+          <h2>В работе</h2>
+          <div id="cardsInWork"></div>
+        </div>
+
+        <!-- Выполнено -->
+        <div style="flex: 1">
+          <h2>Выполнено</h2>
+          <div id="cardsDone"></div>
+        </div>
+      </div>
+    </div>
 
     <script src="js/script.js"></script>
   </body>

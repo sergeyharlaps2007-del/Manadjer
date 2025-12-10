@@ -1,0 +1,21 @@
+/* Карточки */
+.task-card {
+  border: 1px solid #333;
+  padding: 10px;
+  margin-bottom: 10px;
+  width: 300px;
+  border-radius: 6px;
+  background: #f2f2f2;
+}
+
+.task-card h3 {
+  margin: 0 0 5px 0;
+}
+
+.task-card p {
+  margin: 4px 0;
+}
+
+.task-card button {
+  margin-right: 10px;
+}
