@@ -9,13 +9,24 @@
   <body>
     <h1>Менеджер задач</h1>
 
+    <!-- Кнопка переключения вида  -->
+    <div style="margin-bottom: 15px">
+      <button id="viewToggleBtn" title="Переключить вид">🔁 Вид</button>
+    </div>
+
     <div>
       <input id="taskText" placeholder="Текст задачи" />
       <input id="taskDate" type="date" />
       <button id="addBtn">Добавить</button>
     </div>
 
-    <table border="1" width="600" style="margin-top: 20px">
+    <!-- Табличный вид -->
+    <table
+      id="taskTableWrapper"
+      border="1"
+      width="600"
+      style="margin-top: 20px"
+    >
       <thead>
         <tr>
           <th>ID</th>
@@ -28,6 +39,9 @@
 
       <tbody id="taskTable"></tbody>
     </table>
+
+    <!-- Блочный вид -->
+    <div id="taskCardsWrapper" style="display: none; margin-top: 20px"></div>
 
     <script src="js/script.js"></script>
   </body>
