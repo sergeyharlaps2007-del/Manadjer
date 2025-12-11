@@ -56,6 +56,7 @@ function validateDate(dateStr) {
   return true;
 }
 
+// таблица рендерится
 function renderTable() {
   const table = document.getElementById("taskTable");
   table.innerHTML = "";
@@ -101,6 +102,45 @@ function renderTable() {
   });
 }
 
+// блочный рендер (2 колонки)
+function renderBlocks() {
+  const inWork = document.getElementById("cardsInWork");
+  const done = document.getElementById("cardsDone");
+
+  inWork.innerHTML = "";
+  done.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const card = document.createElement("div");
+    card.className = "task-card";
+
+    card.innerHTML = `
+      <h3>${escapeHTML(task.text)}</h3>
+      <p><b>Дата:</b> ${escapeHTML(task.date)}</p>
+      <p><b>Статус:</b> ${task.done ? "Выполнено" : "В работе"}</p>
+    `;
+
+    const btnToggle = document.createElement("button");
+    btnToggle.textContent = task.done ? "Вернуть" : "Выполнить";
+    btnToggle.dataset.action = "done";
+    btnToggle.dataset.id = task.id;
+
+    const btnDelete = document.createElement("button");
+    btnDelete.textContent = "Удалить";
+    btnDelete.dataset.action = "delete";
+    btnDelete.dataset.id = task.id;
+
+    card.appendChild(btnToggle);
+    card.appendChild(btnDelete);
+
+    if (task.done) {
+      done.appendChild(card);
+    } else {
+      inWork.appendChild(card);
+    }
+  });
+}
+
 function addTask() {
   const text = document.getElementById("taskText").value; //Добавляет задачи
   const date = document.getElementById("taskDate").value;
@@ -125,7 +165,7 @@ function addTask() {
   tasks.push(newTask);
 
   saveTasks();
-  renderTable();
+  updateView(); // вместо renderTable
 
   document.getElementById("taskText").value = "";
   document.getElementById("taskDate").value = "";
@@ -134,7 +174,7 @@ function addTask() {
 function deleteTask(id) {
   tasks = tasks.filter((task) => task.id !== id);
   saveTasks(); //Удаление
-  renderTable();
+  updateView();
 }
 
 function toggleDone(id) {
@@ -142,19 +182,34 @@ function toggleDone(id) {
   task.done = !task.done; //Статус переключается
 
   saveTasks();
-  renderTable();
+  updateView();
+}
+
+// переключить вид
+
+let currentView = "table"; // по умолчанию таблица
+
+function updateView() {
+  if (currentView === "table") {
+    document.getElementById("tableView").style.display = "table";
+    document.getElementById("blockView").style.display = "none";
+    renderTable();
+  } else {
+    document.getElementById("tableView").style.display = "none";
+    document.getElementById("blockView").style.display = "block";
+    renderBlocks();
+  }
 }
 
 //Убрал Inline Js и добавлены переклбючатели
-
 document.addEventListener("DOMContentLoaded", () => {
   loadTask();
-  renderTable();
+  updateView();
 
   // Обработчик кнопки добавить
   document.getElementById("addBtn").addEventListener("click", addTask);
 
-  // Обработка кнопок "Выполнить" и "Удалить"
+  // Обработка кнопок Выполнить и Удалить (таблица)
   document.getElementById("taskTable").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -164,5 +219,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (action === "delete") deleteTask(id);
     if (action === "done") toggleDone(id);
+  });
+
+  // Обработка кнопок в БЛОЧНОМ режиме
+  document.getElementById("blockView").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const id = Number(btn.dataset.id);
+
+    if (action === "delete") deleteTask(id);
+    if (action === "done") toggleDone(id);
+  });
+
+  // Переключатели
+  document.getElementById("viewTable").addEventListener("click", () => {
+    currentView = "table";
+    updateView();
+  });
+
+  document.getElementById("viewBlocks").addEventListener("click", () => {
+    currentView = "blocks";
+    updateView();
   });
 });
