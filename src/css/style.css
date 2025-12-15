@@ -4,4 +4,17 @@
   border-radius: 6px;
   background: #f4f4f4;
   margin-bottom: 10px;
+  cursor: grab;
+}
+
+.status-column {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 200px;
+  background: #fafafa;
+}
+
+.status-column h2 {
+  text-align: center;
 }

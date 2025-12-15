@@ -1,19 +1,24 @@
 let tasks = [];
+let statuses = [];
 
 // Загрузка LocalStorage
 function loadTask() {
   try {
-    const saved = localStorage.getItem("tasks");
-    if (saved) {
-      const parsed = JSON.parse(saved);
+    const savedTasks = localStorage.getItem("tasks");
+    const savedStatuses = localStorage.getItem("statuses");
 
-      if (!Array.isArray(parsed)) throw "not array";
+    if (savedTasks) tasks = JSON.parse(savedTasks);
 
-      tasks = parsed;
+    // Статусы по умолчанию
+    if (savedStatuses) {
+      statuses = JSON.parse(savedStatuses);
+    } else {
+      statuses = ["На очереди", "В работе", "На проверке", "Завершено"];
+      saveStatuses();
     }
   } catch (e) {
-    console.warn("Ошибка: повреждён JSON, очищаю.");
-    localStorage.removeItem("tasks");
+    console.warn("Ошибка LocalStorage, очищаю");
+    localStorage.clear();
     tasks = [];
   }
 }
@@ -23,37 +28,26 @@ function saveTasks() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
+function saveStatuses() {
+  localStorage.setItem("statuses", JSON.stringify(statuses));
+}
+
 function escapeHTML(str) {
-  // Защита от <script>alert(1)</script>
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function validateText(text) {
   if (!text) return false;
-  text = text.trim(); // Валидация текста
-  if (text.length === 0) return false;
-  if (text.length > 200) return false;
-  return true;
+  text = text.trim();
+  return text.length > 0 && text.length <= 200;
 }
 
 function validateDate(dateStr) {
   if (!dateStr) return false;
-
   const date = new Date(dateStr);
-  if (isNaN(date)) return false; // Валидация даты
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  //дату нельзя сделать в прошлом
-  if (date < today) return false;
-
-  return true;
+  return date >= today;
 }
 
 // таблица рендерится
@@ -61,186 +55,145 @@ function renderTable() {
   const table = document.getElementById("taskTable");
   table.innerHTML = "";
 
-  //Отображение таблицы
   tasks.forEach((task) => {
     const row = document.createElement("tr");
 
-    const tdId = document.createElement("td");
-    tdId.textContent = task.id;
-
-    const tdText = document.createElement("td");
-    tdText.innerHTML = escapeHTML(task.text);
-
-    const tdDate = document.createElement("td");
-    tdDate.innerHTML = escapeHTML(task.date);
-
-    const tdDone = document.createElement("td");
-    tdDone.textContent = task.done ? "+" : "-";
-
-    const tdActions = document.createElement("td");
-
-    const btnDone = document.createElement("button");
-    btnDone.textContent = "Выполнить";
-    btnDone.dataset.action = "done";
-    btnDone.dataset.id = task.id;
-
-    const btnDelete = document.createElement("button");
-    btnDelete.textContent = "Удалить";
-    btnDelete.dataset.action = "delete";
-    btnDelete.dataset.id = task.id;
-
-    tdActions.appendChild(btnDone);
-    tdActions.appendChild(btnDelete);
-
-    row.appendChild(tdId);
-    row.appendChild(tdText);
-    row.appendChild(tdDate);
-    row.appendChild(tdDone);
-    row.appendChild(tdActions);
+    row.innerHTML = `
+      <td>${task.id}</td>
+      <td>${escapeHTML(task.text)}</td>
+      <td>${task.date}</td>
+      <td>${task.status}</td>
+      <td>
+        <button data-action="delete" data-id="${task.id}">Удалить</button>
+      </td>
+    `;
 
     table.appendChild(row);
   });
 }
 
-// блочный рендер (2 колонки)
+// блочный рендер (динамические колонки)
 function renderBlocks() {
-  const inWork = document.getElementById("cardsInWork");
-  const done = document.getElementById("cardsDone");
+  const container = document.getElementById("columns");
+  container.innerHTML = "";
 
-  inWork.innerHTML = "";
-  done.innerHTML = "";
+  statuses.forEach((status) => {
+    const col = document.createElement("div");
+    col.className = "status-column";
+    col.dataset.status = status;
 
-  tasks.forEach((task) => {
-    const card = document.createElement("div");
-    card.className = "task-card";
+    col.innerHTML = `<h2>${status}</h2>`;
 
-    card.innerHTML = `
-      <h3>${escapeHTML(task.text)}</h3>
-      <p><b>Дата:</b> ${escapeHTML(task.date)}</p>
-      <p><b>Статус:</b> ${task.done ? "Выполнено" : "В работе"}</p>
-    `;
+    col.addEventListener("dragover", (e) => e.preventDefault());
+    col.addEventListener("drop", handleDrop);
 
-    const btnToggle = document.createElement("button");
-    btnToggle.textContent = task.done ? "Вернуть" : "Выполнить";
-    btnToggle.dataset.action = "done";
-    btnToggle.dataset.id = task.id;
+    tasks
+      .filter((t) => t.status === status)
+      .forEach((task) => {
+        const card = document.createElement("div");
+        card.className = "task-card";
+        card.draggable = true;
+        card.dataset.id = task.id;
 
-    const btnDelete = document.createElement("button");
-    btnDelete.textContent = "Удалить";
-    btnDelete.dataset.action = "delete";
-    btnDelete.dataset.id = task.id;
+        card.innerHTML = `
+          <h4>${escapeHTML(task.text)}</h4>
+          <p>${task.date}</p>
+        `;
 
-    card.appendChild(btnToggle);
-    card.appendChild(btnDelete);
+        card.addEventListener("dragstart", handleDrag);
+        col.appendChild(card);
+      });
 
-    if (task.done) {
-      done.appendChild(card);
-    } else {
-      inWork.appendChild(card);
-    }
+    container.appendChild(col);
   });
 }
 
+// Drag & Drop
+let draggedId = null;
+
+function handleDrag(e) {
+  draggedId = Number(e.target.dataset.id);
+}
+
+function handleDrop(e) {
+  const newStatus = e.currentTarget.dataset.status;
+  const task = tasks.find((t) => t.id === draggedId);
+  task.status = newStatus;
+
+  saveTasks();
+  updateView();
+}
+
+//Добавляет задачи
 function addTask() {
-  const text = document.getElementById("taskText").value; //Добавляет задачи
+  const text = document.getElementById("taskText").value;
   const date = document.getElementById("taskDate").value;
 
   if (!validateText(text)) {
-    alert("Некорректный текст задачи!"); // Валидация текста
+    alert("Некорректный текст задачи!");
     return;
   }
 
   if (!validateDate(date)) {
-    alert("Некорректная дата!"); // Валидация даты
+    alert("Некорректная дата!");
     return;
   }
 
-  const newTask = {
+  tasks.push({
     id: Date.now(),
     text: text.trim(),
-    date: date,
-    done: false,
-  };
-
-  tasks.push(newTask);
+    date,
+    status: statuses[0], // начальный статус
+  });
 
   saveTasks();
-  updateView(); // вместо renderTable
+  updateView();
 
-  document.getElementById("taskText").value = "";
-  document.getElementById("taskDate").value = "";
+  taskText.value = "";
+  taskDate.value = "";
 }
 
 function deleteTask(id) {
-  tasks = tasks.filter((task) => task.id !== id);
-  saveTasks(); //Удаление
-  updateView();
-}
-
-function toggleDone(id) {
-  const task = tasks.find((t) => t.id === id);
-  task.done = !task.done; //Статус переключается
-
+  tasks = tasks.filter((t) => t.id !== id);
   saveTasks();
   updateView();
 }
 
 // переключить вид
-
-let currentView = "table"; // по умолчанию таблица
+let currentView = "table";
 
 function updateView() {
   if (currentView === "table") {
-    document.getElementById("tableView").style.display = "table";
-    document.getElementById("blockView").style.display = "none";
+    tableView.style.display = "table";
+    blockView.style.display = "none";
     renderTable();
   } else {
-    document.getElementById("tableView").style.display = "none";
-    document.getElementById("blockView").style.display = "block";
+    tableView.style.display = "none";
+    blockView.style.display = "block";
     renderBlocks();
   }
 }
 
-//Убрал Inline Js и добавлены переклбючатели
+// старт
 document.addEventListener("DOMContentLoaded", () => {
   loadTask();
   updateView();
 
-  // Обработчик кнопки добавить
-  document.getElementById("addBtn").addEventListener("click", addTask);
+  addBtn.addEventListener("click", addTask);
 
-  // Обработка кнопок Выполнить и Удалить (таблица)
-  document.getElementById("taskTable").addEventListener("click", (e) => {
+  taskTable.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
-
-    const action = btn.dataset.action;
-    const id = Number(btn.dataset.id);
-
-    if (action === "delete") deleteTask(id);
-    if (action === "done") toggleDone(id);
+    deleteTask(Number(btn.dataset.id));
   });
 
-  // Обработка кнопок в БЛОЧНОМ режиме
-  document.getElementById("blockView").addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-
-    const action = btn.dataset.action;
-    const id = Number(btn.dataset.id);
-
-    if (action === "delete") deleteTask(id);
-    if (action === "done") toggleDone(id);
-  });
-
-  // Переключатели
-  document.getElementById("viewTable").addEventListener("click", () => {
+  viewTable.onclick = () => {
     currentView = "table";
     updateView();
-  });
+  };
 
-  document.getElementById("viewBlocks").addEventListener("click", () => {
+  viewBlocks.onclick = () => {
     currentView = "blocks";
     updateView();
-  });
+  };
 });

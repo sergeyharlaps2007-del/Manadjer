@@ -9,6 +9,7 @@
   <body>
     <h1>Менеджер задач</h1>
 
+    <!-- Панель добавления задач -->
     <div style="display: flex; align-items: center; gap: 15px">
       <input id="taskText" placeholder="Текст задачи" />
       <input id="taskDate" type="date" />
@@ -29,8 +30,15 @@
       />
     </div>
 
+    <!-- Панель управления статусами -->
+    <h3>Статусы</h3>
+    <div
+      id="statusPanel"
+      style="display: flex; gap: 10px; margin-bottom: 10px"
+    ></div>
+
     <!-- Табличный вид -->
-    <table id="tableView" border="1" width="600" style="margin-top: 20px">
+    <table id="tableView" border="1" width="700" style="margin-top: 20px">
       <thead>
         <tr>
           <th>ID</th>
@@ -40,25 +48,12 @@
           <th>Действие</th>
         </tr>
       </thead>
-
       <tbody id="taskTable"></tbody>
     </table>
 
-    <!-- Блочный вид (изначально скрыт) -->
+    <!-- Блочный вид -->
     <div id="blockView" style="display: none; margin-top: 20px">
-      <div style="display: flex; gap: 20px">
-        <!-- В работе -->
-        <div style="flex: 1">
-          <h2>В работе</h2>
-          <div id="cardsInWork"></div>
-        </div>
-
-        <!-- Выполнено -->
-        <div style="flex: 1">
-          <h2>Выполнено</h2>
-          <div id="cardsDone"></div>
-        </div>
-      </div>
+      <div id="columns" style="display: flex; gap: 20px"></div>
     </div>
 
     <script src="js/script.js"></script>
