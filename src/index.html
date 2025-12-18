@@ -9,7 +9,7 @@
   <body>
     <h1>Менеджер задач</h1>
 
-    <!-- Панель добавления задач -->
+    <!-- Добавление задачи -->
     <div style="display: flex; align-items: center; gap: 15px">
       <input id="taskText" placeholder="Текст задачи" />
       <input id="taskDate" type="date" />
@@ -31,11 +31,14 @@
     </div>
 
     <!-- Панель управления статусами -->
-    <h3>Статусы</h3>
-    <div
-      id="statusPanel"
-      style="display: flex; gap: 10px; margin-bottom: 10px"
-    ></div>
+    <h3>Управление статусами</h3>
+
+    <div id="statusPanel" style="margin-bottom: 10px"></div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px">
+      <input id="newStatusText" placeholder="Новый статус" />
+      <button id="addStatusBtn">Добавить статус</button>
+    </div>
 
     <!-- Табличный вид -->
     <table id="tableView" border="1" width="700" style="margin-top: 20px">

@@ -7,7 +7,9 @@ function loadTask() {
     const savedTasks = localStorage.getItem("tasks");
     const savedStatuses = localStorage.getItem("statuses");
 
-    if (savedTasks) tasks = JSON.parse(savedTasks);
+    if (savedTasks) {
+      tasks = JSON.parse(savedTasks);
+    }
 
     // Статусы по умолчанию
     if (savedStatuses) {
@@ -17,9 +19,10 @@ function loadTask() {
       saveStatuses();
     }
   } catch (e) {
-    console.warn("Ошибка LocalStorage, очищаю");
+    console.warn("Ошибка: повреждён JSON, очищаю.");
     localStorage.clear();
     tasks = [];
+    statuses = [];
   }
 }
 
@@ -39,15 +42,19 @@ function escapeHTML(str) {
 function validateText(text) {
   if (!text) return false;
   text = text.trim();
-  return text.length > 0 && text.length <= 200;
+  if (text.length === 0) return false;
+  if (text.length > 200) return false;
+  return true;
 }
 
 function validateDate(dateStr) {
   if (!dateStr) return false;
   const date = new Date(dateStr);
+  if (isNaN(date)) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return date >= today;
+  if (date < today) return false;
+  return true;
 }
 
 // таблица рендерится
@@ -78,17 +85,15 @@ function renderBlocks() {
   container.innerHTML = "";
 
   statuses.forEach((status) => {
-    const col = document.createElement("div");
-    col.className = "status-column";
-    col.dataset.status = status;
-
-    col.innerHTML = `<h2>${status}</h2>`;
-
-    col.addEventListener("dragover", (e) => e.preventDefault());
-    col.addEventListener("drop", handleDrop);
+    const column = document.createElement("div");
+    column.className = "status-column";
+    column.dataset.status = status;
+    column.innerHTML = `<h2>${status}</h2>`;
+    column.addEventListener("dragover", (e) => e.preventDefault());
+    column.addEventListener("drop", handleDrop);
 
     tasks
-      .filter((t) => t.status === status)
+      .filter((task) => task.status === status)
       .forEach((task) => {
         const card = document.createElement("div");
         card.className = "task-card";
@@ -98,19 +103,27 @@ function renderBlocks() {
         card.innerHTML = `
           <h4>${escapeHTML(task.text)}</h4>
           <p>${task.date}</p>
+          <button class="delete-btn" data-id="${task.id}">🗑</button>
         `;
 
+        // Drag & Drop
         card.addEventListener("dragstart", handleDrag);
-        col.appendChild(card);
+
+        // Удаление задачи через мусорку в блоках
+        card.querySelector(".delete-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteTask(task.id);
+        });
+
+        column.appendChild(card);
       });
 
-    container.appendChild(col);
+    container.appendChild(column);
   });
 }
 
 // Drag & Drop
 let draggedId = null;
-
 function handleDrag(e) {
   draggedId = Number(e.target.dataset.id);
 }
@@ -118,13 +131,69 @@ function handleDrag(e) {
 function handleDrop(e) {
   const newStatus = e.currentTarget.dataset.status;
   const task = tasks.find((t) => t.id === draggedId);
+  if (!task) return;
   task.status = newStatus;
-
   saveTasks();
   updateView();
 }
 
-//Добавляет задачи
+// Панель управления статусами
+function renderStatusPanel() {
+  const panel = document.getElementById("statusPanel");
+  panel.innerHTML = "";
+
+  statuses.forEach((status, index) => {
+    const row = document.createElement("div");
+    row.className = "status-row";
+
+    const input = document.createElement("input");
+    input.value = status;
+
+    input.addEventListener("change", () => {
+      const oldStatus = statuses[index];
+      const newStatus = input.value.trim();
+      if (!newStatus) {
+        input.value = oldStatus;
+        return;
+      }
+      statuses[index] = newStatus;
+
+      tasks.forEach((task) => {
+        if (task.status === oldStatus) {
+          task.status = newStatus;
+        }
+      });
+
+      saveStatuses();
+      saveTasks();
+      updateView();
+    });
+
+    const btnDelete = document.createElement("button");
+    btnDelete.textContent = "Удалить";
+
+    btnDelete.addEventListener("click", () => {
+      const removed = statuses[index];
+      statuses.splice(index, 1);
+
+      tasks.forEach((task) => {
+        if (task.status === removed) {
+          task.status = statuses[0] || "";
+        }
+      });
+
+      saveStatuses();
+      saveTasks();
+      updateView();
+    });
+
+    row.appendChild(input);
+    row.appendChild(btnDelete);
+    panel.appendChild(row);
+  });
+}
+
+// Добавление задачи
 function addTask() {
   const text = document.getElementById("taskText").value;
   const date = document.getElementById("taskDate").value;
@@ -139,13 +208,14 @@ function addTask() {
     return;
   }
 
-  tasks.push({
+  const newTask = {
     id: Date.now(),
     text: text.trim(),
-    date,
-    status: statuses[0], // начальный статус
-  });
+    date: date,
+    status: statuses[0],
+  };
 
+  tasks.push(newTask);
   saveTasks();
   updateView();
 
@@ -154,7 +224,7 @@ function addTask() {
 }
 
 function deleteTask(id) {
-  tasks = tasks.filter((t) => t.id !== id);
+  tasks = tasks.filter((task) => task.id !== id);
   saveTasks();
   updateView();
 }
@@ -163,6 +233,8 @@ function deleteTask(id) {
 let currentView = "table";
 
 function updateView() {
+  renderStatusPanel();
+
   if (currentView === "table") {
     tableView.style.display = "table";
     blockView.style.display = "none";
@@ -180,6 +252,15 @@ document.addEventListener("DOMContentLoaded", () => {
   updateView();
 
   addBtn.addEventListener("click", addTask);
+
+  addStatusBtn.addEventListener("click", () => {
+    const text = newStatusText.value.trim();
+    if (!text) return;
+    statuses.push(text);
+    newStatusText.value = "";
+    saveStatuses();
+    updateView();
+  });
 
   taskTable.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
